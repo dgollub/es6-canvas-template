@@ -32,6 +32,8 @@ $ gulp webserver
 
 # Copyright
 
+Loosely based on [Chris Nighle's ES6 React template](https://github.com/nilghe/react-es6-template).
+
 Copyright (c) 2015 by Daniel Kurashige-Gollub, daniel@kurashige-gollub
 
 
