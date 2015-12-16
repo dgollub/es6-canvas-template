@@ -16,9 +16,7 @@ $ gulp webserver
 
 ## Dependencies
 * [sass](http://sass-lang.com/install)
-* [reactjs](https://facebook.github.io/react/)
 * [gulpjs](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md)
-* [altjs](http://alt.js.org/)
 
 # Usage
 

@@ -6,6 +6,50 @@
 import $ from 'jquery';
 
 
+let initOwlImageElement = () => {
+    let url = "/img/owl.png";
+    let img = document.createElement("img");
+
+    img.setAttribute('crossOrigin', 'anonymous');
+
+    let drawLater = () => {
+        let image = img;
+        let [ w, h ] = [ image.naturalWidth || image.width , image.naturalHeight || image.height ];
+
+        // somehow sometimes the image is not fully done loading yet and this.naturalWidth/width return undefined
+        if (isNaN(w)) {
+            setTimeout(drawLater, 16);
+            return;
+        }
+
+        let canvas = document.createElement("canvas");
+        
+        canvas.width = w;
+        canvas.height = h;
+
+        let ctx = canvas.getContext("2d");
+
+        ctx.width = w;
+        ctx.height = h;
+        
+        ctx.drawImage(image, 0, 0);
+
+        // var dataURL = canvas.toDataURL("image/png");
+        // pictureOwlData = dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+        pictureOwlData = ctx.getImageData(0, 0, w, h);
+    }
+
+    img.onload = drawLater;
+
+    img.src = url;
+
+    return img;
+};
+
+let pictureOwlData = null; // not really needed
+let pictureOwlImageElement = initOwlImageElement();
+
+
 class Canvas {
 
     constructor(element) {
@@ -18,7 +62,6 @@ class Canvas {
 
         this.ctx = this.e.getContext("2d");
         this.name = this.$e.attr("name") || this.$e.attr("id");
-
     }
 
     toString() {
@@ -38,86 +81,46 @@ class Canvas {
 
     draw() {
         console.log(`drawing canvas ${this.name}`);
+        
         this.ctx.clearRect(0, 0, this.ctx.width, this.ctx.height);
         this.ctx.fillColor = "green";
         this.ctx.fillRect(20, 20, 40, 40);
+
+        if (pictureOwlImageElement !== null) {
+            this.ctx.drawImage(pictureOwlImageElement, 0, 0, pictureOwlImageElement.naturalWidth, pictureOwlImageElement.naturalHeight, 20, 80, 50, 70);
+        }
     }
 
 }
 
 
-let canvasList = [];
 
-let addCanvas = (listOrElement) => {
-    console.log("addCanvas", listOrElement, typeof listOrElement);
-    
-    if (listOrElement instanceof Canvas) {
-        canvasList.push(listOrElement);
-        return listOrElement;
-    }
 
-    let internalList = [];
 
-    let addNewCanvas = (e) => {
-        let c = (e instanceof Canvas) ? e : new Canvas(e);
-        canvasList.push(c);
-        internalList.push(c);
-        return c;
-    };
+let canvas = null;
 
-    if (typeof listOrElement.length != "undefined") {
-
-        if (listOrElement.length > 1) {
-
-            let list = [].prototype.slice.apply(listOrElement, 1); // TODO(dkg): test this code
-
-            list.forEach((e) => {
-                if (element.tagName !== "CANVAS") {
-                    throw "Element is not a Canvas!";
-                }
-                addNewCanvas(e);
-            });
-
-            return internalList.length === 1 ? internalList[0] : internalList;
-
-        } else {
-
-            return addNewCanvas(listOrElement instanceof $ ? listOrElement.get(0) : listOrElement[0]);
-
-        }
-
-    } else if (typeof listOrElement.tagName != "undefined" && listOrElement.tagName === "CANVAS") {
-
-        return addNewCanvas(listOrElement);
-
-    } else {
-
-        throw "Element is not a Canvas or an array of Canvas elements";
-
-    }
+let initCanvas = (element) => {
+    canvas = new Canvas(element);
+    return canvas;    
 };
 
 let resizeCanvas = () => {
-    // console.log("resizeCanvas");
-    canvasList.forEach((c) => {
-        c.resize();
-    });
+    if (canvas !== null) {
+        canvas.resize();
+    }
 };
 
-let drawCanvas = () => {
-    // console.log("drawCanvas");
-    canvasList.forEach((c) => {
-        c.draw();
-    });
-};
-
-let initCanvasSystem = () => {
+let startCanvasRedrawLoop = () => {
+    if (canvas === null) {
+        console.warn("No canvas object. Please run 'initCanvas' first.");
+        return;
+    }
     let drawLoop = () => {
-        drawCanvas();
+        canvas.draw();
         requestAnimationFrame(drawLoop);
     };
     requestAnimationFrame(drawLoop);
 };
 
 
-export { initCanvasSystem, drawCanvas, addCanvas, resizeCanvas, Canvas };
+export { startCanvasRedrawLoop, initCanvas, resizeCanvas, Canvas };
